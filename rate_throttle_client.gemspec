@@ -29,4 +29,6 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "wait_for_it"
   spec.add_development_dependency "m"
+  spec.add_development_dependency "puma"
+  spec.add_development_dependency "timecop"
 end

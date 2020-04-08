@@ -15,4 +15,4 @@ module RateThrottleClient
   end
 end
 
-Dir[File.dirname(__FILE__) + '/rate_throttle_client/clients/*.rb'].each {|file| require file }
+Dir[File.dirname(__FILE__) + '/rate_throttle_client/clients/*.rb'].each { |file| require file }

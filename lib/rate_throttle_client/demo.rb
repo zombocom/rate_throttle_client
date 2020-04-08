@@ -54,17 +54,20 @@ class Demo
   TIME_SCALE = ENV.fetch("TIME_SCALE", 1).to_f
   RACKUP_FILE = Pathname.new(__dir__).join("servers/gcra/config.ru")
 
+  attr_reader :log_dir, :rackup_file
+
   def initialize(client:,thread_count: THREAD_COUNT, process_count: PROCESS_COUNT, duration: DURATION, log_dir: nil, time_scale: TIME_SCALE, stream_requests: false, json_duration: 30, rackup_file: RACKUP_FILE, starting_limit: 0, remaining_stop_under: nil)
     @client = client
     @thread_count = thread_count
     @process_count = process_count
     @duration = duration
-    @log_dir = log_dir || Pathname.new(__dir__).join("../logs/clients/#{Time.now.strftime('%Y-%m-%d-%H-%M-%s-%N')}-#{client.class}")
+    @log_dir = log_dir || Pathname.new(__dir__).join("../../logs/clients/#{Time.now.strftime('%Y-%m-%d-%H-%M-%s-%N')}-#{client.class}")
     @time_scale = time_scale
     @stream_requests = stream_requests
     @rackup_file = rackup_file
     @starting_limit = starting_limit
     @remaining_stop_under = remaining_stop_under
+    @mutex = Mutex.new
     @json_duration = 30 # seconds
     @port = UniquePort.call
     @threads = []
@@ -146,25 +149,27 @@ class Demo
     request_count = 0
     retry_count = 0
 
-    if !@client.instance_variable_get(:"@time_scale")
-      def @client.sleep(val)
-        @max_sleep_val = val if val > @max_sleep_val
-        Thread.current.thread_variable_set("last_sleep_value", val)
+    @mutex.synchronize do
+      if !@client.instance_variables.include?(:"@time_scale")
+        def @client.sleep(val)
+          @max_sleep_val = val if val > @max_sleep_val
+          Thread.current.thread_variable_set("last_sleep_value", val)
 
-        super val/@time_scale
+          super val/@time_scale
+        end
+
+        def @client.max_sleep_val
+          @max_sleep_val
+        end
+
+        def @client.last_sleep
+          @last_sleep || 0
+        end
       end
 
-      def @client.max_sleep_val
-        @max_sleep_val
-      end
-
-      def @client.last_sleep
-        @last_sleep || 0
-      end
+      @client.instance_variable_set(:"@time_scale", @time_scale)
+      @client.instance_variable_set(:"@max_sleep_val", 0)
     end
-
-    @client.instance_variable_set(:"@time_scale", @time_scale)
-    @client.instance_variable_set(:"@max_sleep_val", 0)
 
     loop do
       begin_time = Time.now
