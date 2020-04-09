@@ -189,8 +189,7 @@ class Demo
         next_json_time = begin_time + @json_duration
       end
 
-      request = nil
-      @client.call do
+      request = @client.call do
         request_count += 1
 
         request = begin
@@ -228,14 +227,8 @@ class Demo
         break if (request.headers["RateLimit-Remaining"].to_i <= @remaining_stop_under)
       end
     end
+    stop_all_theads!
 
-    @threads.each {|t|
-      next if @remaining_stop_under
-
-      if t != Thread.current && t.backtrace_locations && t.backtrace_locations.first.label == "sleep"
-        t.raise(TimeIsUpError)
-      end
-    }
   rescue Excon::Error::Socket => e
     raise e
   rescue TimeIsUpError
@@ -243,6 +236,19 @@ class Demo
     # When this exception is raised, do nothing and exit
   ensure
     write_json_value(retry_count: retry_count, request_count: request_count, max_sleep_val: @client.max_sleep_val)
+  end
+
+  # Even though all clients might have reached their `end_time` they might be stuck in a long `sleep`.
+  # This method signals to any threads that might be stuck in a `sleep` to stop via an exception that we raise
+  # and catch
+  private def stop_all_theads!
+    @threads.each do |t|
+      next if @remaining_stop_under
+
+      if t != Thread.current && t.backtrace_locations && t.backtrace_locations.first.label == "sleep"
+        t.raise(TimeIsUpError)
+      end
+    end
   end
 
   private def write_json_value(retry_count:, request_count:, max_sleep_val:)
