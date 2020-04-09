@@ -7,7 +7,6 @@ class RateThrottleClient::DemoTest < Minitest::Test
 
     io = StringIO.new
     demo.print_results(io)
-    puts io.string
     assert_match("retry_ratio: [0.11, 0.37, 0.12, 0.22, 0.10, 0.11, 0.35, 0.29, 0.11, 0.10]", io.string)
   end
 
