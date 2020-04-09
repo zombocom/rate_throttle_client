@@ -1,5 +1,5 @@
 module RateThrottleClient
-  class ExponentialIncreaseSleepAndRemainingDecrease
+  class ExponentialIncreaseProportionalRemainingDecrease
     def initialize(log: DEFAULT_LOG_BLOCK, sleep_for: 0)
       @minimum_sleep = MIN_SLEEP
       @multiplier = 1.2
