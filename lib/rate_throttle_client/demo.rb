@@ -83,12 +83,12 @@ class Demo
     FileUtils.mkdir_p(@log_dir)
   end
 
-  def print_results
-    puts
-    puts "## Raw #{@client.class} results"
-    puts
+  def print_results(io = STDOUT)
+    io.puts
+    io.puts "## Raw #{@client.class} results"
+    io.puts
     self.results.each do |key, value|
-      puts "#{key}: [#{ value.map {|x| "%.2f" % x}.join(", ")}]"
+      io.puts "#{key}: [#{ value.map {|x| "%.2f" % x}.join(", ")}]"
     end
   end
 
