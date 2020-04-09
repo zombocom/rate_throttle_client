@@ -155,10 +155,48 @@ class Demo
 
   private def run_client_single
     end_at_time = Time.now + @duration
-    next_json_time = Time.now + @json_duration
+    json_at_time = Time.now + @json_duration
     request_count = 0
     retry_count = 0
 
+    monkey_patch_client_sleep
+    loop do
+      begin_time = Time.now
+      break if begin_time > end_at_time
+
+      if begin_time > json_at_time
+        write_json_value(retry_count: retry_count, request_count: request_count, max_sleep_val: @client.max_sleep_val)
+        json_at_time = begin_time + @json_duration
+      end
+
+      req = nil
+      @client.call do
+        request_count += 1
+
+        req = make_request
+
+        retry_count += 1 if req.status == 429
+
+        stream_requests(req, retry_count: retry_count, request_count: request_count) if @stream_requests
+        req
+      end
+
+      if @remaining_stop_under
+        break if (req.headers["RateLimit-Remaining"].to_i <= @remaining_stop_under)
+      end
+    end
+    stop_all_theads!
+
+  rescue Excon::Error::Socket => e
+    raise e
+  rescue TimeIsUpError
+    # Since the sleep time can be very high, we need a way to notify sleeping threads they can stop
+    # When this exception is raised, do nothing and exit
+  ensure
+    write_json_value(retry_count: retry_count, request_count: request_count, max_sleep_val: @client.max_sleep_val)
+  end
+
+  private def monkey_patch_client_sleep
     @mutex.synchronize do
       if !@client.instance_variables.include?(:"@time_scale")
         def @client.sleep(val)
@@ -180,51 +218,17 @@ class Demo
       @client.instance_variable_set(:"@time_scale", @time_scale)
       @client.instance_variable_set(:"@max_sleep_val", 0)
     end
+  end
 
-    loop do
-      begin_time = Time.now
-      break if begin_time > end_at_time
-      if begin_time > next_json_time
-        write_json_value(retry_count: retry_count, request_count: request_count, max_sleep_val: @client.max_sleep_val)
-        next_json_time = begin_time + @json_duration
-      end
+  private def make_request
+    req = Excon.get("http://localhost:#{@port}")
 
-      request = @client.call do
-        request_count += 1
-
-        request = begin
-          Excon.get("http://localhost:#{@port}")
-        rescue Excon::Error::Timeout => e
-          puts e.inspect
-          puts "retrying"
-          retry
-        end
-
-        case request.status
-        when 200
-        when 429
-          retry_count += 1
-        else
-          raise "Got unexpected reponse #{request.status}. #{request.inspect}"
-        end
-
-        stream_requests(request, retry_count: retry_count, request_count: request_count)  if @stream_requests
-        request
-      end
-
-      if @remaining_stop_under
-        break if (request.headers["RateLimit-Remaining"].to_i <= @remaining_stop_under)
-      end
-    end
-    stop_all_theads!
-
-  rescue Excon::Error::Socket => e
-    raise e
-  rescue TimeIsUpError
-    # Since the sleep time can be very high, we need a way to notify sleeping threads they can stop
-    # When this exception is raised, do nothing and exit
-  ensure
-    write_json_value(retry_count: retry_count, request_count: request_count, max_sleep_val: @client.max_sleep_val)
+    raise "Got unexpected reponse #{req.status}. #{req.inspect}" if req.status != 200 &&  req.status != 429
+    req
+  rescue Excon::Error::Timeout => e
+    puts e.inspect
+    puts "retrying"
+    retry
   end
 
   private def stream_requests(request, retry_count:, request_count:)
