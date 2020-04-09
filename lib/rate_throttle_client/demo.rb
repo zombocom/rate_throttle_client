@@ -61,12 +61,18 @@ class Demo
     @thread_count = thread_count
     @process_count = process_count
     @duration = duration
-    @log_dir = log_dir || Pathname.new(__dir__).join("../../logs/clients/#{Time.now.strftime('%Y-%m-%d-%H-%M-%s-%N')}-#{client.class}")
-    @time_scale = time_scale
+    @time_scale = time_scale.to_f
     @stream_requests = stream_requests
     @rackup_file = rackup_file
     @starting_limit = starting_limit
     @remaining_stop_under = remaining_stop_under
+
+    if log_dir
+      @log_dir = Pathname.new(log_dir)
+    else
+      @log_dir = Pathname.new(__dir__).join("../../logs/clients/#{Time.now.strftime('%Y-%m-%d-%H-%M-%s-%N')}-#{client.class}")
+    end
+
     @mutex = Mutex.new
     @json_duration = 30 # seconds
     @port = UniquePort.call
@@ -108,12 +114,16 @@ class Demo
   def call
     WaitForIt.new("bundle exec puma #{@rackup_file.to_s} -p #{@port}", env: {"TIME_SCALE" => @time_scale.to_i.to_s, "STARTING_LIMIT" => @starting_limit.to_s}, wait_for: "Use Ctrl-C to stop") do |spawn|
       @process_count.times.each do
-        @pids << fork do
-          run_threads
-        end
+        boot_process
       end
 
       @pids.map { |pid| Process.wait(pid) }
+    end
+  end
+
+  private def boot_process
+    @pids << fork do
+      run_threads
     end
   end
 
@@ -214,10 +224,14 @@ class Demo
         request
       end
 
-      break if @remaining_stop_under && (request.headers["RateLimit-Remaining"].to_i <= @remaining_stop_under)
+      if @remaining_stop_under
+        break if (request.headers["RateLimit-Remaining"].to_i <= @remaining_stop_under)
+      end
     end
 
     @threads.each {|t|
+      next if @remaining_stop_under
+
       if t != Thread.current && t.backtrace_locations && t.backtrace_locations.first.label == "sleep"
         t.raise(TimeIsUpError)
       end
