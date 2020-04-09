@@ -208,18 +208,7 @@ class Demo
           raise "Got unexpected reponse #{request.status}. #{request.inspect}"
         end
 
-        if @stream_requests
-          status_string = String.new
-          status_string << "#{Process.pid}##{Thread.current.object_id}: "
-          status_string << "status=#{request.status} "
-          status_string << "remaining=#{request.headers["RateLimit-Remaining"]} "
-          status_string << "retry_count=#{retry_count} "
-          status_string << "request_count=#{request_count} "
-          status_string << "max_sleep_val=#{ sprintf("%.2f", @client.max_sleep_val) } "
-
-          puts status_string
-        end
-
+        stream_requests(request, retry_count: retry_count, request_count: request_count)  if @stream_requests
         request
       end
 
@@ -236,6 +225,18 @@ class Demo
     # When this exception is raised, do nothing and exit
   ensure
     write_json_value(retry_count: retry_count, request_count: request_count, max_sleep_val: @client.max_sleep_val)
+  end
+
+  private def stream_requests(request, retry_count:, request_count:)
+    status_string = String.new
+    status_string << "#{Process.pid}##{Thread.current.object_id}: "
+    status_string << "status=#{request.status} "
+    status_string << "remaining=#{request.headers["RateLimit-Remaining"]} "
+    status_string << "retry_count=#{retry_count} "
+    status_string << "request_count=#{request_count} "
+    status_string << "max_sleep_val=#{ sprintf("%.2f", @client.max_sleep_val) } "
+
+    puts status_string
   end
 
   # Even though all clients might have reached their `end_time` they might be stuck in a long `sleep`.
