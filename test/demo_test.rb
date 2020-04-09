@@ -2,6 +2,14 @@ require "test_helper"
 
 module RateThrottleClient
   class DemoTest < Minitest::Test
+    def setup
+      @tmp_dir = Dir.mktmpdir
+    end
+
+    def teardown
+      FileUtils.remove_entry @tmp_dir
+    end
+
     def test_print_results
       dir = fixture_path("logs/90_sec_json_logs")
       demo = Demo.new(client: Object.new, log_dir: dir)
@@ -17,18 +25,21 @@ module RateThrottleClient
         sleep 1
         yield
       end
-      demo = Demo.new(client: client, duration: 4, starting_limit: 4500, process_count: 1, thread_count: 1)
+      demo = Demo.new(client: client, duration: 4, starting_limit: 4500, process_count: 1, thread_count: 1, log_dir: @tmp_dir)
       demo.call
 
       hash = demo.results
       request_count_no_time_scale = hash["request_count"].sum
 
-      demo = Demo.new(client: client, duration: 4, time_scale: 10, starting_limit: 4500, process_count: 1, thread_count: 1)
-      demo.call
 
-      hash = demo.results
-      request_count = hash["request_count"].sum
-      assert_equal(request_count_no_time_scale, request_count)
+      Dir.mktmpdir do |tmp_dir_2|
+        demo = Demo.new(client: client, duration: 4, time_scale: 10, starting_limit: 4500, process_count: 1, thread_count: 1, log_dir: tmp_dir_2)
+        demo.call
+
+        hash = demo.results
+        request_count = hash["request_count"].sum
+        assert_equal(request_count_no_time_scale, request_count)
+      end
     end
 
     def test_duration
@@ -50,7 +61,7 @@ module RateThrottleClient
           })
         end
         client = RateThrottleClient::Null.new
-        demo = Demo.new(client: client, duration: 10**100, process_count: 1, thread_count: 1, remaining_stop_under: 10, rackup_file: tmp_file)
+        demo = Demo.new(client: client, duration: 10**100, process_count: 1, thread_count: 1, remaining_stop_under: 10, rackup_file: tmp_file, log_dir: @tmp_dir)
         demo.call
 
         hash = demo.results
@@ -71,7 +82,7 @@ module RateThrottleClient
         end
 
         client = RateThrottleClient::Null.new
-        demo = Demo.new(client: client, duration: 1, process_count: 1, rackup_file: tmp_file)
+        demo = Demo.new(client: client, duration: 1, process_count: 1, rackup_file: tmp_file, log_dir: @tmp_dir)
         demo.call
 
         hash = demo.results
@@ -81,7 +92,7 @@ module RateThrottleClient
 
     def test_starting_limit
       client = RateThrottleClient::Null.new
-      demo = Demo.new(client: client, duration: 1, process_count: 1, starting_limit: 10 ** 100)
+      demo = Demo.new(client: client, duration: 1, process_count: 1, starting_limit: 10 ** 100, log_dir: @tmp_dir)
 
       demo.call
 
@@ -91,7 +102,7 @@ module RateThrottleClient
 
     def test_stream_requests
       client = RateThrottleClient::Null.new
-      demo = Demo.new(client: client, duration: 1, process_count: 1, stream_requests: true)
+      demo = Demo.new(client: client, duration: 1, process_count: 1, stream_requests: true, log_dir: @tmp_dir)
       def demo.boot_process;
         run_client_single
       end
@@ -108,19 +119,17 @@ module RateThrottleClient
     end
 
     def test_log_dir
-      Dir.mktmpdir do |tmp_dir|
-        client = RateThrottleClient::Null.new
-        demo = Demo.new(client: client, duration: 1, log_dir: tmp_dir)
-        demo.call
+      client = RateThrottleClient::Null.new
+      demo = Demo.new(client: client, duration: 1, log_dir: @tmp_dir)
+      demo.call
 
-        clients = Dir[File.join(tmp_dir, "*.json")]
-        assert_equal 10, clients.count
-      end
+      clients = Dir[File.join(@tmp_dir, "*.json")]
+      assert_equal 10, clients.count
     end
 
     def test_calls_null
       client = RateThrottleClient::Null.new
-      demo = Demo.new(client: client, duration: 1)
+      demo = Demo.new(client: client, duration: 1, log_dir: @tmp_dir)
       demo.call
 
       assert(demo.log_dir.directory?, "Expected #{demo.log_dir} to be a directory, but it was not")
@@ -140,7 +149,7 @@ module RateThrottleClient
       number = rand(2..200)
 
       client = RateThrottleClient::Null.new
-      demo = Demo.new(client: client, duration: 1, process_count: number)
+      demo = Demo.new(client: client, duration: 1, process_count: number, log_dir: @tmp_dir)
       def demo.boot_process; @boot_process_call_count ||= 0; @boot_process_call_count += 1; end
 
       demo.call
@@ -152,7 +161,7 @@ module RateThrottleClient
       number = rand(2..20)
 
       client = RateThrottleClient::Null.new
-      demo = Demo.new(client: client, duration: 1, process_count: 1, thread_count: number)
+      demo = Demo.new(client: client, duration: 1, process_count: 1, thread_count: number, log_dir: @tmp_dir)
 
       demo.call
 
