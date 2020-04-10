@@ -26,7 +26,6 @@ jobs:
       - image: circleci/ruby:2.5
     steps:
       - checkout
-      - <<: *restore
       - <<: *bundle
       - <<: *save
       - <<: *unit
@@ -35,7 +34,6 @@ jobs:
       - image: circleci/ruby:2.6
     steps:
       - checkout
-      - <<: *restore
       - <<: *bundle
       - <<: *save
       - <<: *unit
@@ -44,7 +42,6 @@ jobs:
       - image: circleci/ruby:2.7
     steps:
       - checkout
-      - <<: *restore
       - <<: *bundle
       - <<: *save
       - <<: *unit
@@ -53,7 +50,6 @@ jobs:
       - image: circleci/jruby:latest
     steps:
       - checkout
-      - <<: *restore
       - <<: *bundle
       - <<: *save
       - <<: *unit
