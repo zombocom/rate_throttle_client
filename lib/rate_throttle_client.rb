@@ -8,6 +8,7 @@ module RateThrottleClient
   DEFAULT_LOG_BLOCK = log = ->(req, throttle) {}
   MAX_LIMIT = 4500.to_f
   MIN_SLEEP = 3600/MAX_LIMIT
+  MULTIPLIER = 1.2
 
   @clients = []
   def self.register_client(client)

@@ -9,7 +9,7 @@ module RateThrottleClient
       start_sleep_for: 0)
       @log = log
       @minimum_sleep = minimum_sleep
-      @multiplier = 1.2
+      @multiplier = MULTIPLIER
       @sleep_for = start_sleep_for
     end
 

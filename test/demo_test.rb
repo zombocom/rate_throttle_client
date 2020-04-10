@@ -12,7 +12,7 @@ module RateThrottleClient
 
     def test_print_results
       dir = fixture_path("logs/90_sec_json_logs")
-      demo = Demo.new(client: Object.new, log_dir: dir)
+      demo = Demo.new(client: Null.new, log_dir: dir)
 
       io = StringIO.new
       demo.print_results(io)

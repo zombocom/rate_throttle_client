@@ -5,6 +5,7 @@ require 'date'
 require 'json'
 require 'timecop'
 require 'wait_for_it'
+require 'enumerable/statistics'
 
 Thread.abort_on_exception = true
 
@@ -84,11 +85,15 @@ class Demo
   end
 
   def print_results(io = STDOUT)
+    result_hash = self.results
     io.puts
-    io.puts "## Raw #{@client.class} results"
+    io.puts "## #{@client.class} results (duration: #{@duration}, multiplier: #{@client.multiplier})"
     io.puts
-    self.results.each do |key, value|
-      io.puts "#{key}: [#{ value.map {|x| "%.2f" % x}.join(", ")}]"
+    io.puts "Highest retry rate:  #{result_hash["retry_ratio"].max * 100} %"
+    io.puts "Max sleep time:      #{result_hash["max_sleep_val"].max} seconds"
+    io.puts "Stdev Request Count: #{result_hash["request_count"].stdev}"
+    result_hash.each do |key, value|
+      io.puts "Raw #{key}: [#{ value.map {|x| "%.2f" % x}.join(", ")}]"
     end
   end
 
