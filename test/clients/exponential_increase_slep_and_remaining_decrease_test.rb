@@ -1,9 +1,9 @@
 require "test_helper"
 
 module RateThrottleClient
-  class ExponentialIncreaseSleepAndRemainingDecreaseTest < Minitest::Test
+  class ExponentialIncreaseProportionalRemainingDecreaseTest < Minitest::Test
     def test_gets_called
-      client = ExponentialIncreaseSleepAndRemainingDecrease.new
+      client = ExponentialIncreaseProportionalRemainingDecrease.new
 
       @called_count = 0
       client.call do
