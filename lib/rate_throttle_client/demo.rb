@@ -99,7 +99,7 @@ class Demo
       @log_dir.join(entry)
     end.select do |file|
       file.file? && file.extname == ".json"
-    end.map do |file|
+    end.sort.map do |file|
       JSON.parse(file.read)
     end.each do |json|
       json.each_key do |key|
