@@ -10,6 +10,14 @@ module RateThrottleClient
       end
 
       assert_equal 1, @called_count
+
+      @called_count = 0
+      client.call do
+        @called_count += 1
+        @response ||= FakeRetry.new(count: 1)
+        @response.call
+      end
+      assert_equal 2, @called_count
     end
 
     def test_log_block_is_called

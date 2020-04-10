@@ -5,7 +5,7 @@ require 'thread'
 
 module RateThrottleClient
   class Error < StandardError; end
-  DEFAULT_LOG_BLOCK = log = ->(req, throttle) {}
+  DEFAULT_LOG_BLOCK = log = ->(info) {}
   MAX_LIMIT = 4500.to_f
   MIN_SLEEP = 3600/MAX_LIMIT
   MULTIPLIER = 1.2
