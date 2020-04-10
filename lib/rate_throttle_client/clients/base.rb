@@ -2,7 +2,7 @@ module RateThrottleClient
   # Standard interface for Client classes
   # Don't abuse this power
   class Base
-    attr_accessor :log, :minimum_sleep, :multiplier, :start_sleep_for
+    attr_accessor :log, :minimum_sleep, :multiplier, :start_sleep_for, :sleep_for
 
     def initialize(log: DEFAULT_LOG_BLOCK,
       minimum_sleep: MIN_SLEEP,

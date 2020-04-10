@@ -4,7 +4,7 @@ module RateThrottleClient
 
     def initialize(*args, decrease_divisor: nil, remaining_block: nil, **kargs)
       super(*args, **kargs)
-      @decrease_divisor = decrease_divisor || MAX_LIMIT
+      @decrease_divisor = (decrease_divisor || MAX_LIMIT).to_f
       @remaining_block = remaining_block || ->(req) {
         req.headers["RateLimit-Remaining"].to_i
       }
