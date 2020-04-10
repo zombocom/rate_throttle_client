@@ -1,5 +1,5 @@
 module RateThrottleClient
-  class Null
+  class Null < Base
     def initialize(*_, **_)
     end
 

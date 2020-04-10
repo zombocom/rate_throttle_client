@@ -2,16 +2,13 @@ require "test_helper"
 
 module RateThrottleClient
   class ExponentialIncreaseGradualDecreaseTest < Minitest::Test
-    def test_gets_called
-      client = ExponentialIncreaseGradualDecrease.new
+    include ClientSharedTests
+    def setup
+      @klass = ExponentialIncreaseGradualDecrease
+    end
 
-      @called_count = 0
-      client.call do
-        @called_count += 1
-        FakeResponse.new
-      end
-
-      assert_equal 1, @called_count
+    def test_kwargs
+      assert 42, @klass.new(decrease: 42).decrease
     end
   end
 end

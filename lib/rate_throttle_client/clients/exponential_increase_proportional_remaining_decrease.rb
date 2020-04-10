@@ -1,11 +1,13 @@
 module RateThrottleClient
-  class ExponentialIncreaseProportionalRemainingDecrease
-    def initialize(log: DEFAULT_LOG_BLOCK, sleep_for: 0)
-      @minimum_sleep = MIN_SLEEP
-      @multiplier = 1.2
-      @log = log
-      @sleep_for = sleep_for
-      @decrease_divisor = MAX_LIMIT
+  class ExponentialIncreaseProportionalRemainingDecrease < Base
+    attr_accessor :decrease_divisor, :remaining_block
+
+    def initialize(*args, decrease_divisor: nil, remaining_block: nil, **kargs)
+      super(*args, **kargs)
+      @decrease_divisor = decrease_divisor || MAX_LIMIT
+      @remaining_block = remaining_block || ->(req) {
+        req.headers["RateLimit-Remaining"].to_i
+      }
     end
 
     def call(&block)
@@ -15,14 +17,14 @@ module RateThrottleClient
       while (req = yield) && req.status == 429
         sleep_for += @minimum_sleep
 
-        log.call(req, RateThrottleInfo.new(sleep_for: sleep_for))
-
+        @log.call(Info.new(sleep_for: sleep_for, request: req))
         sleep(sleep_for + jitter(sleep_for))
+
         sleep_for *= @multiplier
       end
 
-      remaining = req.headers["RateLimit-Remaining"].to_i
-      decrease_value = (sleep_for * remaining) / @decrease_divisor
+      decrease_value = sleep_for * @remaining_block.call(req)
+      decrease_value /= @decrease_divisor
 
       if sleep_for >= decrease_value
         sleep_for -= decrease_value
@@ -35,8 +37,7 @@ module RateThrottleClient
       req
     end
 
-    def jitter(sleep_for)
-      sleep_for * rand(0.0..0.1)
+    def sleep_and_log(sleep_for: , request: )
     end
   end
 end

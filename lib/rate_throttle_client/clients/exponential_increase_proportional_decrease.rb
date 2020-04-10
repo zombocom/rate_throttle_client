@@ -1,11 +1,10 @@
 module RateThrottleClient
-  class ExponentialIncreaseProportionalDecrease
-    def initialize(log: DEFAULT_LOG_BLOCK, sleep_for: 0)
-      @minimum_sleep = MIN_SLEEP
-      @decrease_divisor = MAX_LIMIT
-      @multiplier = 1.2
-      @log = log
-      @sleep_for = sleep_for
+  class ExponentialIncreaseProportionalDecrease < Base
+    attr_accessor :decrease_divisor
+
+    def initialize(*args, decrease_divisor: nil, **kargs)
+      super(*args, **kargs)
+      @decrease_divisor = decrease_divisor || MAX_LIMIT
     end
 
     def call(&block)
@@ -15,9 +14,9 @@ module RateThrottleClient
       while (req = yield) && req.status == 429
         sleep_for += @minimum_sleep
 
-        log.call(req, RateThrottleInfo.new(sleep_for: sleep_for))
-
+        @log.call(Info.new(sleep_for: sleep_for, request: req))
         sleep(sleep_for + jitter(sleep_for))
+
         sleep_for *= @multiplier
       end
 
@@ -32,10 +31,6 @@ module RateThrottleClient
       @sleep_for = sleep_for
 
       req
-    end
-
-    def jitter(sleep_for)
-      sleep_for * rand(0.0..0.1)
     end
   end
 end
