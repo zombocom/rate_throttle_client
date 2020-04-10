@@ -17,7 +17,7 @@ module RateThrottleClient
       io = StringIO.new
       demo.print_results(io)
 
-      assert_match("retry_ratio: [0.10, 0.37, 0.10, 0.22, 0.35, 0.11, 0.11, 0.11, 0.12, 0.29]", io.string)
+      assert_match("retry_ratios: [0.10, 0.37, 0.10, 0.22, 0.35, 0.11, 0.11, 0.11, 0.12, 0.29]", io.string)
     end
 
     def test_time_scale
