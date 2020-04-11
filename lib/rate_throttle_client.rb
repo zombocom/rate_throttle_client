@@ -18,4 +18,5 @@ module RateThrottleClient
   end
 end
 
+require_relative 'rate_throttle_client/clients/base.rb'
 Dir[File.dirname(__FILE__) + '/rate_throttle_client/clients/*.rb'].each { |file| require file }
