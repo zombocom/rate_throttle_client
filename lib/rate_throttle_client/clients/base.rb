@@ -5,7 +5,7 @@ module RateThrottleClient
     attr_accessor :log, :min_sleep, :multiplier, :sleep_for
 
     def initialize(log: nil, min_sleep: nil, starting_sleep_for: 0, multiplier: nil)
-      @log = log || RateThrottleClient.default_log_block
+      @log = log || RateThrottleClient.log_block
       @min_sleep = min_sleep || RateThrottleClient.min_sleep
       @multiplier = multiplier || RateThrottleClient.multiplier
       @sleep_for = starting_sleep_for
