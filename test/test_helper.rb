@@ -1,6 +1,10 @@
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "rate_throttle_client"
 
+RateThrottleClient.config do |config|
+  config.log_block = ->(info){ }
+end
+
 if defined?(M)
   # https://github.com/qrush/m/issues/80
   require "minitest"

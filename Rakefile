@@ -14,6 +14,10 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "rate_throttle_client"
 require 'rate_throttle_client/demo'
 
+RateThrottleClient.config do |config|
+  config.log_block = ->(info){ }
+end
+
 MINUTE = 60
 task :bench do
   duration = 30 * MINUTE
