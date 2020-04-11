@@ -2,7 +2,6 @@
 
 Rate limiting is for servers, rate throttling is for clients. This library implements a number of strategies for handling rate throttling on the client and a methodology for comparing performance of those clients in simulated environments. Essentially, we don't just give you the code to rate throttle, we also give you the information to help you figure out the best strategy to rate throttle as well.
 
-
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -24,17 +23,45 @@ Or install it yourself as:
 Wrap requests to an API endpoint using one of the provided rate throttling classes:
 
 ```ruby
-client = RateThrottleClient::ExponentialIncreaseProportionalRemainingDecrease.new
-response = client.call do
+throttle = RateThrottleClient::ExponentialIncreaseProportionalRemainingDecrease.new
+
+response = throttle.call do
   Excon.get("https://api.example.com")
 end
 ```
 
-If the server returns a 429 status (the HTTP status code indicating that a server side rate limit has been reached) then the request will be retried according to the classes' strategy.
+If the server returns a `429` status (the HTTP code indicating that a server side rate limit has been reached) then the request will be retried according to the classes' strategy.
 
-## Response interface
+If you're not using Excon to build your API client, then you'll need to make sure the object returned to the block responds to `status` (returning the status code) and a `headers` method.
 
-The rate throttling classes assume that anything you return from the block will have a `status` method as well as a `headers` method. If your HTTP client does not return a response object with these methods, then you can wrap your code in a custom object for compatability with this library.
+### Config
+
+```ruby
+RateThrottleClient.config do |config|
+  config.log_block = ->(info){ puts "I get called when rate limiting is triggered #{info.sleep_for} #{info.request}" }
+  config.max_limit = 4500.to_f # Maximum number of requests per hour
+  config.multiplier = 1.2 # When rate limiting happens, this is amount to the sleep value is increased by
+end
+```
+
+## Strategies
+
+This library has a few strategies you can choose between:
+
+- RateThrottleClient::ExponentialBackoff
+- RateThrottleClient::ExponentialIncreaseGradualDecrease
+- RateThrottleClient::ExponentialIncreaseProportionalDecrease
+- RateThrottleClient::ExponentialIncreaseProportionalRemainingDecrease
+
+To choose, you need to understand what makes a "good" throttling algorithm, and then you need some benchmarks.
+
+## What Makes a Good Rate Throttle strategy?
+
+- Minimize retry ratio: For example if every 50 successful requests, the client hits a rate limited request the ratio of retries is 1/50 or 2%. Why minimize this value? It takes CPU and Network resources to make requests that fail, if the client is making requests that are being limited, it's using resources that could be better spent somewhere else. The server also benefits as it spends less time dealing with rate limiting.
+- Minimize standard deviation of request count across the system: If there are two clients and one client is throttling by sleeping for 100 seconds and the other is throttling for 1 second, the distribution of requests are not equitable. Ideally over time each client might go up or down, but both would see a median of 50 seconds of sleep time. Why? If processes in a system have a high variance, one process is starved for API resources. It then becomes difficult to balance or optimize otherworkloads. When a client is stuck waiting on the API, ideally it can perform other operations (for example in other threads). If one process is using 100% of CPU and slamming the API and other is using 1% of CPU and barely touching the API, it is difficult to balance the workloads.
+- Minimize sleep/wait time: Retry ratio can be improved artificially by choosing high sleep times. In the real world consumers don't want to wait longer than absolutely necessarry. While a client might be able to "work steal" while it is sleeping/waiting, there's not guarantee that's the case. Essentially assume that any amount of time spent sleeping over the minimum amount of time required is wasted. This value is calculateable, but that calculation requires complete information of the distributed system.
+  - At high workload it should be able to consume all available requests: If a server allows 100,000 requests in a day then a client should be capable of making 100,000 requests. If the rate limiting algorithm only allows it to make 100 requests it would have low retry ratio but high wait time.
+  - Handle a change in work load to either slow down or speed up rate throttling: If the workload is light, then clients should not wait/sleep much. If workload is heavy, then clients should sleep/wait enough. The algorithm should adjust to a changing workload as quickly as possible.
 
 ## Benchmarks
 
@@ -57,7 +84,6 @@ Time to clear workload (4500 requests, starting_sleep: 1s):
 76.18 seconds
 ```
 
-
 ### RateThrottleClient::ExponentialIncreaseGradualDecrease results (duration: 30.0 minutes, multiplier: 1.2)
 
 ```
@@ -75,7 +101,6 @@ Time to clear workload (4500 requests, starting_sleep: 1s):
 65.50 seconds
 ```
 
-
 ### RateThrottleClient::ExponentialIncreaseProportionalDecrease results (duration: 30.0 minutes, multiplier: 1.2)
 
 ```
@@ -92,7 +117,6 @@ Raw request_counts: [343.00, 123.00, 223.00, 144.00, 128.00, 348.00, 116.00, 383
 Time to clear workload (4500 requests, starting_sleep: 1s):
 489.24 seconds
 ```
-
 
 ### RateThrottleClient::ExponentialIncreaseProportionalRemainingDecrease results (duration: 30.0 minutes, multiplier: 1.2)
 
