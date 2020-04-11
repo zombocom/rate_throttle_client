@@ -39,11 +39,12 @@ task :bench do
     begin
       workload = 4500
       starting_sleep = 1
-      before_time = Time.now
       rackup_file = Pathname.new(__dir__).join("lib/rate_throttle_client/servers/decrease_only/config.ru")
 
       client = klass.new(starting_sleep_for: starting_sleep)
       demo = RateThrottleClient::Demo.new(client: client, time_scale: 10, starting_limit: 4500, duration: duration, remaining_stop_under: 10, rackup_file: rackup_file)
+
+      before_time = Time.now
       demo.call
       diff = Time.now - before_time
     ensure

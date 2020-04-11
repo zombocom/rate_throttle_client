@@ -88,7 +88,7 @@ Raw request_counts: [1317.00, 1314.00, 1015.00, 963.00, 1254.00, 1133.00, 1334.0
 
 ```
 Time to clear workload (4500 requests, starting_sleep: 1s):
-76.18 seconds
+74.33 seconds
 ```
 
 ### RateThrottleClient::ExponentialIncreaseGradualDecrease results (duration: 30.0 minutes, multiplier: 1.2)
@@ -105,7 +105,7 @@ Raw request_counts: [48.00, 57.00, 56.00, 49.00, 282.00, 85.00, 83.00, 79.00, 28
 
 ```
 Time to clear workload (4500 requests, starting_sleep: 1s):
-65.50 seconds
+115.54 seconds
 ```
 
 ### RateThrottleClient::ExponentialIncreaseProportionalDecrease results (duration: 30.0 minutes, multiplier: 1.2)
@@ -122,7 +122,7 @@ Raw request_counts: [343.00, 123.00, 223.00, 144.00, 128.00, 348.00, 116.00, 383
 
 ```
 Time to clear workload (4500 requests, starting_sleep: 1s):
-489.24 seconds
+551.10 seconds
 ```
 
 ### RateThrottleClient::ExponentialIncreaseProportionalRemainingDecrease results (duration: 30.0 minutes, multiplier: 1.2)
@@ -139,7 +139,7 @@ Raw request_counts: [196.00, 269.00, 386.00, 302.00, 239.00, 197.00, 265.00, 150
 
 ```
 Time to clear workload (4500 requests, starting_sleep: 1s):
-66.92 seconds
+84.23 seconds
 ```
 
 ## Development
