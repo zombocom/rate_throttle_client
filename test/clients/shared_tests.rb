@@ -5,20 +5,22 @@ module RateThrottleClient
       def client.sleep(val); end
 
       @called_count = 0
-      client.call do
+      response = client.call do
         @called_count += 1
         FakeResponse.new
       end
 
       assert_equal 1, @called_count
+      assert_equal 200, response.status
 
       @called_count = 0
-      client.call do
+      response = client.call do
         @called_count += 1
         @response ||= FakeRetry.new(count: 1)
         @response.call
       end
       assert_equal 2, @called_count
+      assert_equal 200, response.status
     end
 
     def test_log_block_is_called
