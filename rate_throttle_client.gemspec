@@ -32,4 +32,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "puma"
   spec.add_development_dependency "timecop"
   spec.add_development_dependency "excon"
+  spec.add_development_dependency "enumerable-statistics"
 end

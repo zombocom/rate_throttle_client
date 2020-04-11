@@ -5,14 +5,18 @@ require 'thread'
 
 module RateThrottleClient
   class Error < StandardError; end
-  DEFAULT_LOG_BLOCK = log = ->(req, throttle) {}
-  MAX_LIMIT = 4500.to_f
-  MIN_SLEEP = 3600/MAX_LIMIT
+  class << self
+    attr_accessor :multiplier, :min_sleep, :max_limit, :log_block
+  end
+  self.log_block = ->(info) { puts "RateThrottleClient: sleep_for=#{info.sleep_for}" }
+  self.max_limit = 4500.to_f
+  self.min_sleep = 3600/max_limit
+  self.multiplier = 1.2
 
-  @clients = []
-  def self.register_client(client)
-    @clients << client
+  def self.config
+    yield self
   end
 end
 
+require_relative 'rate_throttle_client/clients/base.rb'
 Dir[File.dirname(__FILE__) + '/rate_throttle_client/clients/*.rb'].each { |file| require file }

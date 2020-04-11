@@ -2,6 +2,11 @@ require "test_helper"
 
 module RateThrottleClient
   class NullTest < Minitest::Test
+    include ClientSharedTests
+    def setup
+      @klass = Null
+    end
+
     def test_gets_called
       client = Null.new
 

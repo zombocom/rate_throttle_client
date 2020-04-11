@@ -1,11 +1,10 @@
 module RateThrottleClient
-  class ExponentialIncreaseGradualDecrease
-    def initialize(log: DEFAULT_LOG_BLOCK)
-      @minimum_sleep = MIN_SLEEP
-      @multiplier = 1.2
-      @log = log
-      @sleep_for = 0
-      @decrease = @minimum_sleep
+  class ExponentialIncreaseGradualDecrease < Base
+    attr_accessor :decrease
+
+    def initialize(*args, decrease: nil, **kargs)
+      super(*args, **kargs)
+      @decrease = decrease || @min_sleep
     end
 
     def call(&block)
@@ -13,11 +12,11 @@ module RateThrottleClient
       sleep(sleep_for + jitter(sleep_for))
 
       while (req = yield) && req.status == 429
-        sleep_for += @minimum_sleep
+        sleep_for += @min_sleep
 
-        log.call(req, RateThrottleInfo.new(sleep_for: sleep_for))
-
+        @log.call(Info.new(sleep_for: sleep_for, request: req))
         sleep(sleep_for + jitter(sleep_for))
+
         sleep_for *= @multiplier
       end
 
@@ -30,10 +29,6 @@ module RateThrottleClient
       @sleep_for = sleep_for
 
       req
-    end
-
-    def jitter(sleep_for)
-      sleep_for * rand(0.0..0.1)
     end
   end
 end

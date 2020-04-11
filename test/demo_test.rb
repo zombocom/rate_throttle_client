@@ -12,12 +12,12 @@ module RateThrottleClient
 
     def test_print_results
       dir = fixture_path("logs/90_sec_json_logs")
-      demo = Demo.new(client: Object.new, log_dir: dir)
+      demo = Demo.new(client: Null.new, log_dir: dir)
 
       io = StringIO.new
       demo.print_results(io)
 
-      assert_match("retry_ratio: [0.10, 0.37, 0.10, 0.22, 0.35, 0.11, 0.11, 0.11, 0.12, 0.29]", io.string)
+      assert_match("retry_ratios: [0.10, 0.37, 0.10, 0.22, 0.35, 0.11, 0.11, 0.11, 0.12, 0.29]", io.string)
     end
 
     def test_time_scale
