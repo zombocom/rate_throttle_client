@@ -7,7 +7,7 @@ module RateThrottleClient
   # rate throttling again.
   class ExponentialBackoff < Base
     def call(&block)
-      sleep_for = @minimum_sleep
+      sleep_for = @min_sleep
 
       while (req = yield) && req.status == 429
         @log.call(Info.new(sleep_for: sleep_for, request: req))

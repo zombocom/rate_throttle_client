@@ -12,13 +12,13 @@ module RateThrottleClient
     end
 
     def test_remaining_effect_on_sleep
-      client_200 = @klass.new(start_sleep_for: 20)
+      client_200 = @klass.new(starting_sleep_for: 20)
       def client_200.sleep(value); end
       client_200.call do
         FakeResponse.new(remaining: 200)
       end
 
-      client_199 = @klass.new(start_sleep_for: 20)
+      client_199 = @klass.new(starting_sleep_for: 20)
       def client_199.sleep(value); end
       client_199.call do
         FakeResponse.new(remaining: 199)
@@ -28,14 +28,14 @@ module RateThrottleClient
 
     def test_proportional_effect_on_sleep
       client_200_start = 200
-      client_200 = @klass.new(start_sleep_for: client_200_start)
+      client_200 = @klass.new(starting_sleep_for: client_200_start)
       def client_200.sleep(value); end
       client_200.call do
         FakeResponse.new
       end
 
       client_400_start = 400
-      client_400 = @klass.new(start_sleep_for: client_400_start)
+      client_400 = @klass.new(starting_sleep_for: client_400_start)
       def client_400.sleep(value); end
       client_400.call do
         FakeResponse.new

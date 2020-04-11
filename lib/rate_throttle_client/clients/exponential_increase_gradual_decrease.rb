@@ -4,7 +4,7 @@ module RateThrottleClient
 
     def initialize(*args, decrease: nil, **kargs)
       super(*args, **kargs)
-      @decrease = decrease || @minimum_sleep
+      @decrease = decrease || @min_sleep
     end
 
     def call(&block)
@@ -12,7 +12,7 @@ module RateThrottleClient
       sleep(sleep_for + jitter(sleep_for))
 
       while (req = yield) && req.status == 429
-        sleep_for += @minimum_sleep
+        sleep_for += @min_sleep
 
         @log.call(Info.new(sleep_for: sleep_for, request: req))
         sleep(sleep_for + jitter(sleep_for))

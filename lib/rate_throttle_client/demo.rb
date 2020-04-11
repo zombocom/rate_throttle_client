@@ -91,9 +91,9 @@ module RateThrottleClient
       io.puts "### #{@client.class} results (duration: #{@duration/60.0} minutes, multiplier: #{@client.multiplier})"
       io.puts
       io.puts "```"
-      io.puts "Avg retry rate:      #{result_hash["retry_ratio"].mean * 100} %"
-      io.puts "Max sleep time:      #{result_hash["max_sleep_val"].max} seconds"
-      io.puts "Stdev Request Count: #{result_hash["request_count"].stdev}"
+      io.puts "Avg retry rate:      #{"%.2f" % (result_hash["retry_ratio"].mean * 100)} %"
+      io.puts "Max sleep time:      #{"%.2f" % result_hash["max_sleep_val"].max} seconds"
+      io.puts "Stdev Request Count: #{"%.2f" % result_hash["request_count"].stdev}"
       io.puts
       result_hash.each do |key, value|
         io.puts "Raw #{key}s: [#{ value.map {|x| "%.2f" % x}.join(", ")}]"

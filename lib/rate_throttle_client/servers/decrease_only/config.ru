@@ -1,4 +1,4 @@
-require 'thread'
+require 'timecop'
 require 'rate_throttle_client'
 
 if ENV["TIME_SCALE"]
@@ -7,28 +7,21 @@ if ENV["TIME_SCALE"]
 end
 
 module RateThrottleClient
-  class GcraFakeServer
+  # This server does not gain new requests over time
+  # it's main purpose is to benchmark how long it takes to
+  # clear a fixed sized workload
+  class NullFakeServer
+
     def initialize(starting_limit: 0)
       @limit_left = starting_limit.to_f
       @mutex = Mutex.new
-      @rate_of_gain = RateThrottleClient.max_limit / 3600.to_f
-      @max_requests = RateThrottleClient.max_limit
     end
 
     def call(_)
-      @last_request ||= Time.now
       headers = nil
       successful_request = false
 
       @mutex.synchronize do
-        if @limit_left < @max_requests
-          current_request = Time.now
-          time_diff = current_request - @last_request
-          @last_request = current_request
-
-          @limit_left = [@limit_left + time_diff * @rate_of_gain, @max_requests].min
-        end
-
         if @limit_left >= 1
           @limit_left -= 1
           successful_request = true
@@ -50,3 +43,7 @@ module RateThrottleClient
     end
   end
 end
+
+starting_limit = ENV.fetch("STARTING_LIMIT", 0).to_i
+run RateThrottleClient::NullFakeServer.new(starting_limit: starting_limit)
+

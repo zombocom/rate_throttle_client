@@ -2,6 +2,7 @@ module RateThrottleClient
   module ClientSharedTests
     def test_gets_called
       client = @klass.new
+      def client.sleep(val); end
 
       @called_count = 0
       client.call do

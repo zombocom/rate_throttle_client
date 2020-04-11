@@ -2,15 +2,13 @@ module RateThrottleClient
   # Standard interface for Client classes
   # Don't abuse this power
   class Base
-    attr_accessor :log, :minimum_sleep, :multiplier, :start_sleep_for, :sleep_for
+    attr_accessor :log, :min_sleep, :multiplier, :sleep_for
 
-    def initialize(log: DEFAULT_LOG_BLOCK,
-      minimum_sleep: MIN_SLEEP,
-      start_sleep_for: 0)
-      @log = log
-      @minimum_sleep = minimum_sleep
-      @multiplier = MULTIPLIER
-      @sleep_for = start_sleep_for
+    def initialize(log: nil, min_sleep: nil, starting_sleep_for: 0, multiplier: nil)
+      @log = log || RateThrottleClient.default_log_block
+      @min_sleep = min_sleep || RateThrottleClient.min_sleep
+      @multiplier = multiplier || RateThrottleClient.multiplier
+      @sleep_for = starting_sleep_for
     end
 
     def jitter(val)
