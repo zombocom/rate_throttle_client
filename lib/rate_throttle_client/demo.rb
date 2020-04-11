@@ -7,6 +7,8 @@ require 'timecop'
 require 'wait_for_it'
 require 'enumerable/statistics'
 
+require_relative 'chart.rb'
+
 Thread.abort_on_exception = true
 
 # A class for simulating or "demoing" a rate throttle client
@@ -99,6 +101,11 @@ module RateThrottleClient
         io.puts "Raw #{key}s: [#{ value.map {|x| "%.2f" % x}.join(", ")}]"
       end
       io.puts "```"
+    end
+
+    def chart(open_file)
+      chart = RateThrottleClient::Chart.new(log_dir: @log_dir, name: @client.class.to_s.gsub("RateThrottleClient::", ""), time_scale: @time_scale)
+      chart.call(open_file)
     end
 
     def results

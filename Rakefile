@@ -34,6 +34,7 @@ task :bench do
       demo.call
     ensure
       demo.print_results
+      demo.chart(true)
     end
 
     begin
@@ -57,3 +58,24 @@ task :bench do
     end
   end
 end
+
+task :charts do
+  duration = 30 * MINUTE
+  clients = [
+    RateThrottleClient::ExponentialBackoff,
+    RateThrottleClient::ExponentialIncreaseGradualDecrease,
+    RateThrottleClient::ExponentialIncreaseProportionalDecrease,
+    RateThrottleClient::ExponentialIncreaseProportionalRemainingDecrease
+  ]
+  clients.each do |klass|
+    begin
+      client = klass.new
+      demo = RateThrottleClient::Demo.new(client: client, duration: duration, time_scale: 10)
+      demo.call
+    ensure
+      demo.print_results
+      demo.chart
+    end
+  end
+end
+
