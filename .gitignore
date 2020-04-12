@@ -9,4 +9,6 @@ Gemfile.lock
 /spec/reports/
 /tmp/
 
+test/fixtures/logs/prop_dec/chart.png
+
 logs/*/**
