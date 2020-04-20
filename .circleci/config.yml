@@ -27,6 +27,15 @@ references:
         - ./vendor/bundle
       key: v1-dependencies-{{ checksum "Gemfile.lock" }}
 jobs:
+  "ruby-2.2":
+    docker:
+      - image: circleci/ruby:2.5
+    steps:
+      - checkout
+      - <<: *imagick
+      - <<: *bundle
+      - <<: *save
+      - <<: *unit
   "ruby-2.3":
     docker:
       - image: circleci/ruby:2.5
@@ -86,6 +95,7 @@ workflows:
   version: 2
   build:
     jobs:
+      - "ruby-2.2"
       - "ruby-2.3"
       - "ruby-2.4"
       - "ruby-2.5"
