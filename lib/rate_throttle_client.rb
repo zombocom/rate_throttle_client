@@ -8,7 +8,7 @@ module RateThrottleClient
   class << self
     attr_accessor :multiplier, :min_sleep, :max_limit, :log_block
   end
-  self.log_block = ->(info) { puts "RateThrottleClient: sleep_for=#{info.sleep_for}" }
+  self.log_block = ->(info) { warn "RateThrottleClient: sleep_for=#{info.sleep_for}" }
   self.max_limit = 4500.to_f
   self.min_sleep = 3600/max_limit
   self.multiplier = 1.2
